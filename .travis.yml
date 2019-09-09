@@ -1,0 +1,20 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t gnarmedia/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true gnarmedia/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t gnarmedia/multi-docker-client ./client
+  - docker build -t gnarmedia/multi-docker-nginx ./nginx
+  - docker build -t gnarmedia/multi-docker-server ./server
+  - docker build -t gnarmedia/multi-docker-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push gnarmedia/multi-docker-client
+  - docker push gnarmedia/multi-docker-nginx
+  - docker push gnarmedia/multi-docker-server
+  - docker push gnarmedia/multi-docker-worker
